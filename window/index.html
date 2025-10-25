@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Trade up calculator by Kina</title>
+    <link rel="stylesheet" href="../styles/window.css" />
+  </head>
+  <body>
+    <div class="app-header">
+      <h1 id="appHeading" data-i18n="heading">Trade up calculator by Kina</h1>
+      <button
+        id="languageToggle"
+        class="language-toggle"
+        type="button"
+        aria-label="ENG / UA"
+      >
+        ENG / UA
+      </button>
+    </div>
+
+    <div
+      id="disclaimer"
+      class="disclaimer is-hidden"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="disclaimerTitle"
+      aria-describedby="disclaimerMessage"
+    >
+      <div class="disclaimer__content">
+        <h2 id="disclaimerTitle" data-i18n="disclaimer.title">Увага</h2>
+        <p id="disclaimerMessage" data-i18n="disclaimer.message">
+          Калькулятор теоретично має працювати вірно, але прохання перевіряти самому, бо
+          впевненності у всіх формулах немає. Базово — ми берем % флота з флот рейнджу для всіх
+          10 предметів, сумуємо і отримуємо середній відсоток. Далі берем кількість скінів з тієї
+          чи іншої колекції, задаєм їм параметр 10% до шансу колекції і на виході вже отриманий
+          шанс з 100% ділим між предметами однієї колекції. Має бути вірно, але це не точно.
+        </p>
+        <button id="disclaimerClose" class="disclaimer__close" type="button" data-i18n="disclaimer.close">
+          Зрозуміло
+        </button>
+      </div>
+    </div>
+
+    <section class="controls">
+      <div class="filters" aria-label="Параметри відбору предметів">
+        <label class="filter">
+          <span class="filter-label" data-i18n="filters.collectionLabel">Колекція або кейс</span>
+          <select id="collectionSelect">
+            <option value="" data-i18n="filters.collectionPlaceholder">Оберіть колекцію або кейс</option>
+          </select>
+        </label>
+        <label class="filter">
+          <span class="filter-label" data-i18n="filters.itemLabel">Предмети з колекції</span>
+          <select id="itemSelect" disabled>
+            <option value="" data-i18n="filters.itemPlaceholder">Спочатку оберіть колекцію</option>
+          </select>
+        </label>
+      </div>
+      <p class="hint" data-i18n="filters.hint">Можна додати до 10 предметів для розрахунку середнього флота.</p>
+    </section>
+
+    <section class="table-section">
+      <p id="placeholderMessage" class="placeholder" data-i18n="placeholders.loading">
+        Завантаження даних про скіни...
+      </p>
+      <div class="table-wrapper">
+        <table id="itemsTable">
+          <thead>
+            <tr>
+              <th data-i18n="table.item">Предмет</th>
+              <th data-i18n="table.range">Флот рейндж</th>
+              <th data-i18n="table.input">Внесений флот</th>
+              <th data-i18n="table.percent">Відсоток</th>
+              <th data-i18n="table.actions"></th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="upgradeSection" class="upgrades is-hidden">
+      <h2 class="upgrades-title" data-i18n="upgrades.title">Можливі результати наступної рідкості</h2>
+      <p id="upgradePlaceholder" class="upgrades-placeholder" data-i18n="upgrades.placeholder">
+        Додайте 10 предметів та введіть коректні значення флота, щоб побачити потенційні результати.
+      </p>
+      <div id="collectionChances" class="upgrade-chances is-hidden" aria-live="polite"></div>
+      <div id="upgradeList" class="upgrade-list"></div>
+    </section>
+
+    <section class="summary">
+      <div data-i18n="summary.label">Середній відсоток флота по внесених предметах:</div>
+      <div id="averagePercent" class="summary-value">—</div>
+      <div id="averageStatus" class="summary-status"></div>
+    </section>
+
+    <footer>
+      <span data-i18n="footer.text">
+        Дані беруться з <code>data/items_simplified.json</code>. Замініть файл на актуальний, щоб працювати з
+        повним списком.
+      </span>
+    </footer>
+
+    <script src="../scripts/window.js" type="module"></script>
+  </body>
+</html>
