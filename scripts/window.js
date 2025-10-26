@@ -274,6 +274,17 @@ const COLLECTION_CATEGORY = {
   KNIFE: 'knife'
 };
 
+const KNIFE_KEYWORDS = [
+  'knife',
+  'bayonet',
+  'karambit',
+  'dagger'
+];
+
+function isKnifeName(normalizedName) {
+  return KNIFE_KEYWORDS.some((keyword) => normalizedName.includes(keyword));
+}
+
 let collectionIndex = new Map();
 let selectedCollection = '';
 let currentCollectionItems = [];
@@ -327,7 +338,7 @@ function getItemCategory(item) {
   if (normalized.includes('gloves') || normalized.includes('hand wraps')) {
     return COLLECTION_CATEGORY.GLOVE;
   }
-  if (name.startsWith('★')) {
+  if (name.startsWith('★') || isKnifeName(normalized)) {
     return COLLECTION_CATEGORY.KNIFE;
   }
   return null;
