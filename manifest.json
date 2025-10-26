@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Trade up calculator by Kina",
   "description": "Chrome-розширення для вибору скінів за колекцією та рідкістю й розрахунку відсотку флота.",
-  "version": "1.0.0",
+  "version": "1.2.1",
   "icons": {
     "32": "icons/icon-32.png",
     "64": "icons/icon-64.png",

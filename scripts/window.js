@@ -268,7 +268,9 @@ const rarityStyles = {
 };
 
 const DEFAULT_ITEM_LIMIT = 10;
-const COVERT_ITEM_LIMIT = 5;
+const TOP_TIER_ITEM_LIMIT = 5;
+const CRAFTABLE_TOP_RARITY = 'Covert';
+const TOP_TIER_RARITY = 'Extraordinary';
 const COLLECTION_CATEGORY = {
   GLOVE: 'glove',
   KNIFE: 'knife'
@@ -317,9 +319,51 @@ function getFloatBounds(item) {
   return { min, max };
 }
 
-function getItemLimit(rarityOverride) {
+function shouldUseTopTierLimit(targetRarity, context = {}) {
+  if (!targetRarity) {
+    return false;
+  }
+
+  if (targetRarity === TOP_TIER_RARITY) {
+    return true;
+  }
+
+  if (targetRarity !== CRAFTABLE_TOP_RARITY) {
+    return false;
+  }
+
+  if (lockedNextRarityAvailability === true) {
+    return true;
+  }
+
+  const { collectionName = null, item = null } = context;
+
+  if (collectionName) {
+    const availability = getCollectionNextRarityAvailability(collectionName, targetRarity);
+    if (availability) {
+      return true;
+    }
+  }
+
+  if (item && Array.isArray(item.collections_or_crates)) {
+    return item.collections_or_crates.some((collectionNameRaw) => {
+      const normalized = normalizeCollectionName(collectionNameRaw);
+      if (!normalized) {
+        return false;
+      }
+      return Boolean(getCollectionNextRarityAvailability(normalized, targetRarity));
+    });
+  }
+
+  return false;
+}
+
+function getItemLimit(rarityOverride, context) {
   const targetRarity = rarityOverride ?? lockedRarity ?? selectedEntries[0]?.item?.rarity ?? null;
-  return targetRarity === 'Covert' ? COVERT_ITEM_LIMIT : DEFAULT_ITEM_LIMIT;
+  if (shouldUseTopTierLimit(targetRarity, context)) {
+    return TOP_TIER_ITEM_LIMIT;
+  }
+  return DEFAULT_ITEM_LIMIT;
 }
 
 function updateFiltersHint() {
@@ -847,7 +891,10 @@ function updateItemSelectForCollection() {
   }
 
   const itemsForCollection = collectionIndex.get(selectedCollection) ?? [];
-  const { items: cappedItems, removedHighestRarity } = filterByRarityCap(itemsForCollection);
+  const { items: cappedItems, removedHighestRarity } = filterByRarityCap(
+    itemsForCollection,
+    selectedCollection
+  );
   const filteredItems = applyRarityLock(cappedItems);
   currentCollectionItems = filteredItems;
 
@@ -870,7 +917,22 @@ function updateItemSelectForCollection() {
 
 function addEntry(item, options = {}) {
   const { collectionName, initialValue = '', initialPercent = null } = options ?? {};
-  const limit = getItemLimit(lockedRarity ?? item?.rarity);
+  const normalizedOptionCollection = normalizeCollectionName(collectionName);
+  const normalizedSelectedCollection = normalizeCollectionName(selectedCollection);
+
+  let storedCollection =
+    normalizedOptionCollection ?? normalizedSelectedCollection ?? null;
+
+  if (!storedCollection && Array.isArray(item?.collections_or_crates)) {
+    storedCollection = item.collections_or_crates
+      .map((collectionNameRaw) => normalizeCollectionName(collectionNameRaw))
+      .find(Boolean);
+  }
+
+  const limit = getItemLimit(lockedRarity ?? item?.rarity, {
+    collectionName: storedCollection,
+    item
+  });
   if (selectedEntries.length >= limit) {
     showTemporaryMessageKey('messages.limitReached', { limit });
     return false;
@@ -885,16 +947,6 @@ function addEntry(item, options = {}) {
   const value = normalizedValue === '' ? '' : String(normalizedValue);
   const percent = Number.isFinite(initialPercent) ? initialPercent : null;
   const hasInitialValue = value !== '';
-
-  const resolvedCollection =
-    normalizeCollectionName(collectionName) ?? normalizeCollectionName(selectedCollection);
-
-  let storedCollection = resolvedCollection;
-  if (!storedCollection && Array.isArray(item?.collections_or_crates)) {
-    storedCollection = item.collections_or_crates
-      .map((collectionNameRaw) => normalizeCollectionName(collectionNameRaw))
-      .find(Boolean);
-  }
 
   const collectionCategory = storedCollection ? getCollectionCategory(storedCollection) : null;
   if (
@@ -1478,9 +1530,18 @@ function populateItemSelect(items, placeholderText) {
   itemSelect.value = '';
 }
 
-function filterByRarityCap(items) {
+function filterByRarityCap(items, collectionName) {
   if (items.length === 0) {
     return { items: [], removedHighestRarity: false };
+  }
+
+  const category = collectionName ? getCollectionCategory(collectionName) : null;
+  if (category === COLLECTION_CATEGORY.KNIFE || category === COLLECTION_CATEGORY.GLOVE) {
+    const filteredTopTier = items.filter((item) => item.rarity !== TOP_TIER_RARITY);
+    return {
+      items: filteredTopTier,
+      removedHighestRarity: filteredTopTier.length !== items.length
+    };
   }
 
   let highestOrder = -Infinity;
